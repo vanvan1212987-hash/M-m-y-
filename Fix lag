@@ -1,15 +1,7 @@
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
 local Terrain = Workspace.Terrain
-local StarterGui = game:GetService("StarterGui")
-
-pcall(function()
-    StarterGui:SetCore("SendNotification", {
-        Title = "fix lag",
-        Text = "Optimizing...",
-        Duration = 5
-    })
-end)
 
 pcall(function()
     settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -27,6 +19,34 @@ Terrain.WaterReflectance = 0
 Terrain.WaterTransparency = 1
 pcall(function() Terrain.Decoration = false end)
 
+local function ClearMeshAndTexture(part)
+    part.Material = Enum.Material.SmoothPlastic
+    part.Reflectance = 0
+    part.CastShadow = false
+    if part:IsA("MeshPart") then
+        part.TextureID = ""
+    end
+    for _, child in pairs(part:GetChildren()) do
+        if child:IsA("SpecialMesh") or child:IsA("CharacterMesh") then
+            child.TextureId = ""
+        elseif child:IsA("Decal") or child:IsA("Texture") then
+            child:Destroy()
+        end
+    end
+end
+
+local function OptimizeCharacter(model)
+    for _, child in pairs(model:GetDescendants()) do
+        if child:IsA("BasePart") then
+            ClearMeshAndTexture(child)
+        elseif child:IsA("Shirt") or child:IsA("Pants") or child:IsA("GraphicShirt") or child:IsA("ShirtGraphic") then
+            child:Destroy()
+        elseif child:IsA("Accessory") or child:IsA("Accoutrement") then
+            child:Destroy()
+        end
+    end
+end
+
 local function OptimizeMax(obj)
     pcall(function()
         if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Cloud") or obj:IsA("Explosion") then
@@ -36,22 +56,20 @@ local function OptimizeMax(obj)
             obj.Enabled = false
             obj:Destroy()
         elseif obj:IsA("Decal") or obj:IsA("Texture") then
-            obj.Transparency = 1
             obj:Destroy()
         elseif obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
             obj.Enabled = false
             obj:Destroy()
         elseif obj:IsA("BasePart") then
-            obj.Material = Enum.Material.SmoothPlastic
-            obj.Reflectance = 0
-            obj.CastShadow = false
-        elseif obj:IsA("MeshPart") then
-            obj.Material = Enum.Material.SmoothPlastic
-            obj.Reflectance = 0
-            obj.CastShadow = false
-            obj.TextureID = ""
-        elseif obj:IsA("SpecialMesh") then
-            obj.TextureId = ""
+            ClearMeshAndTexture(obj)
+            if obj.Parent and obj.Parent:FindFirstChildOfClass("Humanoid") then
+                OptimizeCharacter(obj.Parent)
+            end
+        elseif obj:IsA("Humanoid") then
+            local parent = obj.Parent
+            if parent then
+                OptimizeCharacter(parent)
+            end
         end
     end)
 end
