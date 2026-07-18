@@ -1,0 +1,71 @@
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local Terrain = Workspace.Terrain
+local StarterGui = game:GetService("StarterGui")
+
+pcall(function()
+    StarterGui:SetCore("SendNotification", {
+        Title = "FPS Boost",
+        Text = "Optimizing game...",
+        Duration = 5
+    })
+end)
+
+pcall(function()
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    UserSettings():GetService("UserGameSettings").SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
+end)
+
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 9e9
+Lighting.Brightness = 1
+
+for _, effect in pairs(Lighting:GetChildren()) do
+    if effect:IsA("PostEffect") or effect:IsA("BloomEffect") or effect:IsA("BlurEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("SunRaysEffect") or effect:IsA("DepthOfFieldEffect") then
+        effect.Enabled = false
+        effect:Destroy()
+    end
+end
+
+Terrain.WaterWaveSize = 0
+Terrain.WaterWaveSpeed = 0
+Terrain.WaterReflectance = 0
+Terrain.WaterTransparency = 1
+
+for _, obj in pairs(Workspace:GetDescendants()) do
+    if obj:IsA("Cloud") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+end
+
+local function OptimizeObject(obj)
+    pcall(function()
+        if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.SmoothPlastic
+            obj.Reflectance = 0
+            obj.CastShadow = false
+        elseif obj:IsA("ParticleEmitter") then
+            obj.Rate = 0
+            obj.Enabled = false
+        elseif obj:IsA("Trail") or obj:IsA("Beam") then
+            obj.Enabled = false
+        elseif obj:IsA("Explosion") then
+            obj.Visible = false
+        elseif obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+            obj.Enabled = false
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+        end
+    end)
+end
+
+task.spawn(function()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        OptimizeObject(obj)
+    end
+end)
+
+Workspace.DescendantAdded:Connect(function(newObj)
+    OptimizeObject(newObj)
+end)
