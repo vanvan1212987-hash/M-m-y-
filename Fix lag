@@ -5,8 +5,8 @@ local StarterGui = game:GetService("StarterGui")
 
 pcall(function()
     StarterGui:SetCore("SendNotification", {
-        Title = "FPS Boost",
-        Text = "Optimizing game...",
+        Title = "fix lag",
+        Text = "Optimizing...",
         Duration = 5
     })
 end)
@@ -18,54 +18,52 @@ end)
 
 Lighting.GlobalShadows = false
 Lighting.FogEnd = 9e9
-Lighting.Brightness = 1
-
-for _, effect in pairs(Lighting:GetChildren()) do
-    if effect:IsA("PostEffect") or effect:IsA("BloomEffect") or effect:IsA("BlurEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("SunRaysEffect") or effect:IsA("DepthOfFieldEffect") then
-        effect.Enabled = false
-        effect:Destroy()
-    end
-end
+Lighting.Brightness = 0
+Lighting.ClockTime = 12
 
 Terrain.WaterWaveSize = 0
 Terrain.WaterWaveSpeed = 0
 Terrain.WaterReflectance = 0
 Terrain.WaterTransparency = 1
+pcall(function() Terrain.Decoration = false end)
 
-for _, obj in pairs(Workspace:GetDescendants()) do
-    if obj:IsA("Cloud") then
-        obj.Enabled = false
-        obj:Destroy()
-    end
-end
-
-local function OptimizeObject(obj)
+local function OptimizeMax(obj)
     pcall(function()
-        if obj:IsA("BasePart") then
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Cloud") or obj:IsA("Explosion") then
+            obj.Enabled = false
+            obj:Destroy()
+        elseif obj:IsA("PostEffect") or obj:IsA("BloomEffect") or obj:IsA("BlurEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("SunRaysEffect") or obj:IsA("DepthOfFieldEffect") or obj:IsA("Atmosphere") then
+            obj.Enabled = false
+            obj:Destroy()
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+            obj:Destroy()
+        elseif obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+            obj.Enabled = false
+            obj:Destroy()
+        elseif obj:IsA("BasePart") then
             obj.Material = Enum.Material.SmoothPlastic
             obj.Reflectance = 0
             obj.CastShadow = false
-        elseif obj:IsA("ParticleEmitter") then
-            obj.Rate = 0
-            obj.Enabled = false
-        elseif obj:IsA("Trail") or obj:IsA("Beam") then
-            obj.Enabled = false
-        elseif obj:IsA("Explosion") then
-            obj.Visible = false
-        elseif obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
-            obj.Enabled = false
-        elseif obj:IsA("Decal") or obj:IsA("Texture") then
-            obj.Transparency = 1
+        elseif obj:IsA("MeshPart") then
+            obj.Material = Enum.Material.SmoothPlastic
+            obj.Reflectance = 0
+            obj.CastShadow = false
+            obj.TextureID = ""
+        elseif obj:IsA("SpecialMesh") then
+            obj.TextureId = ""
         end
     end)
 end
 
 task.spawn(function()
+    for _, obj in pairs(Lighting:GetDescendants()) do
+        OptimizeMax(obj)
+    end
     for _, obj in pairs(Workspace:GetDescendants()) do
-        OptimizeObject(obj)
+        OptimizeMax(obj)
     end
 end)
 
-Workspace.DescendantAdded:Connect(function(newObj)
-    OptimizeObject(newObj)
-end)
+Workspace.DescendantAdded:Connect(OptimizeMax)
+Lighting.DescendantAdded:Connect(OptimizeMax)
