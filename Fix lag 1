@@ -1,0 +1,64 @@
+if setfpscap then
+    setfpscap(90)
+end
+
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local Terrain = Workspace:WaitForChild("Terrain")
+
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 180
+Lighting.Brightness = 0
+Lighting.Technology = Enum.Technology.Compatibility
+
+for _, child in ipairs(Lighting:GetChildren()) do
+    if child:IsA("Sky") or child:IsA("Atmosphere") or child:IsA("BloomEffect") or child:IsA("BlurEffect") or child:IsA("ColorCorrectionEffect") or child:IsA("SunRaysEffect") then
+        child:Destroy()
+    end
+end
+
+Terrain.Decoration = false
+Terrain.WaterWaveSize = 0
+Terrain.WaterWaveSpeed = 0
+Terrain.WaterReflectance = 0
+Terrain.WaterTransparency = 1
+
+local waterPlatform = Instance.new("Part")
+waterPlatform.Size = Vector3.new(100000, 1, 100000)
+waterPlatform.Position = Vector3.new(0, 15, 0) 
+waterPlatform.Anchored = true
+waterPlatform.Transparency = 1
+waterPlatform.CanCollide = true
+waterPlatform.Parent = Workspace
+
+local function optimizeObject(obj)
+    if obj:IsA("BasePart") and not obj:IsA("Terrain") then
+        obj.Material = Enum.Material.SmoothPlastic
+        obj.Reflectance = 0
+        obj.CastShadow = false
+    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+        obj.Transparency = 1
+    elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Sparkles") or obj:IsA("Smoke") then
+        obj.Enabled = false
+    elseif obj:IsA("MeshPart") then
+        obj.TextureID = ""
+    end
+end
+
+for _, obj in ipairs(Workspace:GetDescendants()) do
+    optimizeObject(obj)
+    
+    if obj:IsA("Model") then
+        local name = string.lower(obj.Name)
+        if string.find(name, "tree") or string.find(name, "bush") or string.find(name, "plant") then
+            if math.random(1, 100) <= 80 then
+                obj:Destroy()
+            end
+        end
+    end
+end
+
+Workspace.DescendantAdded:Connect(function(newObj)
+    task.wait(0.05)
+    optimizeObject(newObj)
+end)
